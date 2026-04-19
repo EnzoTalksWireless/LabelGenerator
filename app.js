@@ -21,6 +21,11 @@ let editModeIndex = -1; // -1 = not editing, otherwise = index of label being ed
 const form = document.getElementById('labelForm');
 const companyInput = document.getElementById('companyName');
 const productInput = document.getElementById('productName');
+
+// Validate critical elements exist
+if (!companyInput) console.error('ERROR: Element #companyName not found in HTML');
+if (!productInput) console.error('ERROR: Element #productName not found in HTML');
+
 const receivedDateInput = document.getElementById('receivedDate');
 const cartonsInput = document.getElementById('cartons');
 const packSizeInput = document.getElementById('packSize');
@@ -393,6 +398,10 @@ function setDefaultReceivedDate() {
 
 // Update company select options
 function updateCompanyList() {
+    if (!companyInput) {
+        console.error('companyInput element not found - check HTML for id="companyName"');
+        return;
+    }
     const currentValue = companyInput.value;
     companyInput.innerHTML = '<option value="">-- Select Company --</option>' +
         companies.map(c =>
@@ -402,6 +411,10 @@ function updateCompanyList() {
 
 // Update product select options based on selected company
 function updateProductList(companyName) {
+    if (!productInput) {
+        console.error('productInput element not found - check HTML for id="productName"');
+        return;
+    }
     const currentValue = productInput.value;
     productInput.innerHTML = '<option value="">-- Select Product --</option>';
     productInput.disabled = true;
