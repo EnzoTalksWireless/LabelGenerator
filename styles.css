@@ -343,11 +343,26 @@ input:disabled {
     .container {
         padding: 0.5rem;
     }
-    
+
     .preview-label {
         font-size: 0.5rem;
+        line-height: 1.1;
+        aspect-ratio: 3/2;
     }
-    
+
+    .preview-label .product-name {
+        font-size: 0.55rem;
+    }
+
+    .preview-label .strength,
+    .preview-label .date,
+    .preview-label .quantity,
+    .preview-label .batch,
+    .preview-label .expiry,
+    .preview-label .price {
+        font-size: 0.45rem;
+    }
+
     #calculatorsPopup {
         max-width: 95vw;
         margin: 0 10px;
