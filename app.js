@@ -29,8 +29,6 @@ const expiryInput = document.getElementById('expiry');
 const retailPriceInput = document.getElementById('retailPrice');
 const lockCompanyCheckbox = document.getElementById('lockCompany');
 const lockReceivedDateCheckbox = document.getElementById('lockReceivedDate');
-const companyList = document.getElementById('companyList');
-const productList = document.getElementById('productList');
 const productHint = document.getElementById('productHint');
 const labelList = document.getElementById('labelList');
 const labelCount = document.getElementById('labelCount');
@@ -393,35 +391,39 @@ function setDefaultReceivedDate() {
     receivedDateInput.value = `${day}-${month}-${year}`;
 }
 
-// Update company datalist
+// Update company select options
 function updateCompanyList() {
-    companyList.innerHTML = companies.map(c => 
-        `<option value="${escapeHtml(c)}">`
-    ).join('');
+    const currentValue = companyInput.value;
+    companyInput.innerHTML = '<option value="">-- Select Company --</option>' +
+        companies.map(c =>
+            `<option value="${escapeHtml(c)}" ${c === currentValue ? 'selected' : ''}>${escapeHtml(c)}</option>`
+        ).join('');
 }
 
-// Update product datalist based on selected company
+// Update product select options based on selected company
 function updateProductList(companyName) {
-    productList.innerHTML = '';
+    const currentValue = productInput.value;
+    productInput.innerHTML = '<option value="">-- Select Product --</option>';
     productInput.disabled = true;
-    productInput.value = '';
-    
+
     if (!companyName) {
         if (productHint) productHint.textContent = 'Select a company first to see products';
         return;
     }
-    
+
     const companyProducts = products[companyName] || [];
-    
+
     if (companyProducts.length > 0) {
-        productList.innerHTML = companyProducts.map(p => 
-            `<option value="${escapeHtml(p)}">`
+        productInput.innerHTML += companyProducts.map(p =>
+            `<option value="${escapeHtml(p)}" ${p === currentValue ? 'selected' : ''}>${escapeHtml(p)}</option>`
         ).join('');
         productInput.disabled = false;
         if (productHint) productHint.textContent = `${companyProducts.length} products available`;
     } else {
+        // If no products exist, still enable the select but show placeholder
         productInput.disabled = false;
-        if (productHint) productHint.textContent = 'No saved products for this company - type to add new';
+        productInput.innerHTML = '<option value="">No products available</option>';
+        if (productHint) productHint.textContent = 'No saved products for this company';
     }
 }
 
@@ -545,11 +547,7 @@ window.toggleSettings = function() {
 
 // Setup event listeners
 function setupEventListeners() {
-    // Company input changes
-    companyInput.addEventListener('input', (e) => {
-        updateProductList(e.target.value.trim());
-    });
-    
+    // Company select changes
     companyInput.addEventListener('change', (e) => {
         updateProductList(e.target.value.trim());
     });
