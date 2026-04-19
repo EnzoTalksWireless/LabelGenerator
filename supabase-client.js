@@ -109,42 +109,40 @@ async function loadProductsFromSupabase() {
     return products;
 }
 
-// Add company to Supabase
+// Add company to Supabase (uses upsert to avoid conflicts)
 async function addCompanyToSupabase(companyName) {
     if (!isSupabaseReady()) throw new Error('Supabase not initialized');
     if (!companyName) return false;
-    
+
     const { error } = await supabaseClient
         .from('companies')
-        .insert([{ company_name: companyName }]);
-    
-    // 23505 is unique violation - company already exists, that's OK
-    if (error && error.code !== '23505') {
+        .upsert([{ company_name: companyName }], { onConflict: 'company_name' });
+
+    if (error) {
         console.error('Error adding company:', error);
         return false;
     }
-    
+
     return true;
 }
 
-// Add product to Supabase
+// Add product to Supabase (uses upsert to avoid conflicts)
 async function addProductToSupabase(companyName, productName) {
     if (!isSupabaseReady()) throw new Error('Supabase not initialized');
     if (!companyName || !productName) return false;
-    
+
     const { error } = await supabaseClient
         .from('products')
-        .insert([{ 
-            company_name: companyName, 
-            product_name: productName 
-        }]);
-    
-    // 23505 is unique violation - product already exists, that's OK
-    if (error && error.code !== '23505') {
+        .upsert([{
+            company_name: companyName,
+            product_name: productName
+        }], { onConflict: ['company_name', 'product_name'] });
+
+    if (error) {
         console.error('Error adding product:', error);
         return false;
     }
-    
+
     return true;
 }
 
