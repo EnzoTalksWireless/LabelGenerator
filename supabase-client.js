@@ -136,7 +136,7 @@ async function addProductToSupabase(companyName, productName) {
         .upsert([{
             company_name: companyName,
             product_name: productName
-        }], { onConflict: ['company_name', 'product_name'] });
+        }], { onConflict: 'company_name,product_name' });
 
     if (error) {
         console.error('Error adding product:', error);
@@ -182,7 +182,7 @@ async function importProductsToSupabase(productsList) {
     const { error } = await supabaseClient
         .from('products')
         .upsert(data, { 
-            onConflict: ['company_name', 'product_name']
+            onConflict: 'company_name,product_name'
         });
     
     if (error) {
