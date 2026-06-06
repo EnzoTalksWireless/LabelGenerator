@@ -962,6 +962,12 @@ async function addLabel() {
     debugLog('=== ADD LABEL START ===');
     debugLog('Current labels count', labelsData.length);
     
+    // Disable submit button to prevent double submission
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalText = submitBtn.textContent;
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Processing...';
+    
     try {
         const companyName = companyInput.value.trim();
         const productName = productInput.value.trim();
@@ -1065,6 +1071,10 @@ async function addLabel() {
         debugLog('ERROR in addLabel', error.message);
         console.error('Full error:', error);
         showToast('Error adding label: ' + error.message, 'error');
+    } finally {
+        // Re-enable submit button
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
     }
 }
 
@@ -1073,12 +1083,14 @@ async function addCompanyToDB(companyName) {
     if (!companyName) return;
     
     if (STORAGE_MODE === 'supabase' && isSupabaseReady()) {
-        // Add to Supabase
-        const success = await addCompanyToSupabase(companyName);
-        if (success && !companies.includes(companyName)) {
-            companies.push(companyName);
-            companies.sort();
-            updateCompanyList();
+        // ONLY add to Supabase if it doesn't exist locally
+        if (!companies.includes(companyName)) {
+            const success = await addCompanyToSupabase(companyName);
+            if (success) {
+                companies.push(companyName);
+                companies.sort();
+                updateCompanyList();
+            }
         }
     } else if (STORAGE_MODE === 'api') {
         // Add to SQLite via API
@@ -1104,15 +1116,17 @@ async function addProductToDB(companyName, productName) {
     if (!companyName || !productName) return;
     
     if (STORAGE_MODE === 'supabase' && isSupabaseReady()) {
-        // Add to Supabase
-        const success = await addProductToSupabase(companyName, productName);
-        if (success) {
-            if (!products[companyName]) {
-                products[companyName] = [];
-            }
-            if (!products[companyName].includes(productName)) {
+        // ONLY add to Supabase if it doesn't exist locally
+        const companyProducts = products[companyName] || [];
+        if (!companyProducts.includes(productName)) {
+            const success = await addProductToSupabase(companyName, productName);
+            if (success) {
+                if (!products[companyName]) {
+                    products[companyName] = [];
+                }
                 products[companyName].push(productName);
                 products[companyName].sort();
+                updateProductList(companyName);
             }
         }
     } else if (STORAGE_MODE === 'api') {
