@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Warehouse Stock Label Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-stone-100 min-h-screen">
+    <div class="container mx-auto max-w-5xl p-4">
+        <!-- Header -->
+        <header class="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white p-4 md:p-5 rounded-xl shadow-xl mb-6 border-b-4 border-yellow-400">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2 md:gap-0">
+                <div>
+                    <h1 class="text-xl md:text-3xl font-extrabold tracking-tight drop-shadow-md">
+                        <span class="text-yellow-300">Warehouse</span> Stock Label Generator
+                    </h1>
+                    <p class="text-indigo-100 text-xs md:text-sm mt-1 font-medium">Create and print inventory labels</p>
+                </div>
+                <div class="text-left md:text-right">
+                    <p class="text-yellow-300 text-xs md:text-sm font-bold bg-black/20 px-2 py-1 rounded-full inline-block whitespace-nowrap">Made By Hamza</p>
+                </div>
+            </div>
+        </header>
+
+        <!-- Horizontal Form Section -->
+        <div class="bg-stone-50 rounded-lg shadow-md p-4 mb-6 border border-stone-200">
+            <h2 class="text-lg font-semibold mb-3 text-stone-700 border-b border-stone-200 pb-2">Label Details</h2>
+            
+            <form id="labelForm" class="space-y-3">
+                <!-- Row 1: Company, Product, Date (flexible grid) -->
+                <div id="row1Container" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium text-stone-600 mb-1">Company Name</label>
+                        <input type="text" id="companyName" list="companyList" 
+                            class="w-full px-2 py-1.5 border border-stone-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm bg-white"
+                            placeholder="Select or type company" autocomplete="off">
+                        <datalist id="companyList"></datalist>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-stone-600 mb-1">Product Name</label>
+                        <input type="text" id="productName" list="productList" 
+                            class="w-full px-2 py-1.5 border border-stone-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm bg-white"
+                            placeholder="Select or type product" autocomplete="off" disabled>
+                        <datalist id="productList"></datalist>
+                    </div>
+                    <div id="receivedDateSection" class="hidden md:col-span-1">
+                        <label class="text-xs font-medium text-stone-600 mb-1 block">Received Date</label>
+                        <div id="receivedDateContainer">
+                            <input type="text" id="receivedDate" 
+                                class="w-full px-2 py-1.5 border border-stone-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm bg-white"
+                                placeholder="DD-MM-YY" maxlength="8">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Row 2: Cartons, Pack Size, Batch -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium text-stone-600 mb-1">Cartons</label>
+                        <input type="number" id="cartons" min="0"
+                            class="w-full px-2 py-1.5 border border-stone-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm bg-white"
+                            placeholder="Qty">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-stone-600 mb-1">Pack Size</label>
+                        <input type="number" id="packSize" min="1"
+                            class="w-full px-2 py-1.5 border border-stone-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm bg-white"
+                            placeholder="Size">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-stone-600 mb-1">Batch</label>
+                        <input type="text" id="batch" 
+                            class="w-full px-2 py-1.5 border border-stone-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm bg-white"
+                            placeholder="Batch">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-stone-600 mb-1">Expiry</label>
+                        <input type="text" id="expiry" 
+                            class="w-full px-2 py-1.5 border border-stone-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm bg-white"
+                            placeholder="DD-MM-YYYY" maxlength="10">
+                    </div>
+                </div>
+
+                <!-- Row 3: Date Toggle, Loose Toggle, Loose Qty, Retail Price -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
+                    <!-- Received Date Toggle (always visible) -->
+                    <div>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <div class="relative inline-block w-10 h-5 align-middle select-none transition duration-200 ease-in">
+                                <input type="checkbox" id="toggleReceivedDate" class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer">
+                                <label for="toggleReceivedDate" class="toggle-label block overflow-hidden h-5 rounded-full bg-stone-300 cursor-pointer checked:bg-green-400"></label>
+                            </div>
+                            <span class="text-xs font-medium text-stone-600">Stock Received Date</span>
+                        </label>
+                    </div>
+                    <!-- Manual Loose Toggle -->
+                    <div>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <div class="relative inline-block w-10 h-5 align-middle select-none transition duration-200 ease-in">
+                                <input type="checkbox" id="manualLooseToggle" class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer">
+                                <label for="manualLooseToggle" class="toggle-label block overflow-hidden h-5 rounded-full bg-stone-300 cursor-pointer"></label>
+                            </div>
+                            <span class="text-xs font-medium text-stone-600">Add Loose Qty</span>
+                        </label>
+                    </div>
+                    <!-- Loose Quantity (hidden by default) -->
+                    <div id="looseQtyContainer" class="hidden">
+                        <label class="block text-xs font-medium text-stone-600 mb-1">Loose Quantity</label>
+                        <input type="number" id="looseQty" min="0"
+                            class="w-full px-2 py-1.5 border border-stone-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm bg-white"
+                            placeholder="Loose pieces">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-stone-600 mb-1">Retail Price</label>
+                        <input type="number" id="retailPrice" step="0.01" min="0"
+                            class="w-full px-2 py-1.5 border border-stone-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm bg-white"
+                            placeholder="Price">
+                    </div>
+                    <!-- Action Buttons -->
+                    <div class="flex gap-2">
+                        <button type="submit" 
+                            class="w-full bg-amber-600 text-white py-1.5 px-3 rounded-md text-sm font-medium hover:bg-amber-700 transition">
+                            Add
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Row 4: Lock Toggles & Settings -->
+                <div class="flex flex-wrap items-center gap-3 pt-2 border-t border-stone-200">
+                    <label class="flex items-center gap-1.5 cursor-pointer">
+                        <input type="checkbox" id="lockCompany" class="w-4 h-4 text-amber-600 rounded">
+                        <span class="text-xs text-stone-600">Lock Company</span>
+                    </label>
+                    <label id="lockReceivedDateLabel" class="flex items-center gap-1.5 cursor-pointer">
+                        <input type="checkbox" id="lockReceivedDate" class="w-4 h-4 text-amber-600 rounded">
+                        <span class="text-xs text-stone-600">Lock Date</span>
+                    </label>
+                    
+                    <!-- Settings Dropdown -->
+                    <div class="relative ml-auto">
+                        <button type="button" id="settingsBtn" class="bg-stone-500 text-white py-1 px-3 rounded text-xs hover:bg-stone-600 transition flex items-center gap-1">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            </svg>
+                            Settings
+                        </button>
+                        <div id="settingsDropdown" class="hidden absolute right-0 bottom-full mb-1 w-44 bg-stone-50 rounded-md shadow-lg border border-stone-200 z-50">
+                            <input type="file" id="importCompanies" accept=".xlsx,.xls" class="hidden">
+                            <button type="button" onclick="document.getElementById('importCompanies').click(); toggleSettings();" 
+                                class="w-full text-left px-3 py-2 text-xs text-stone-700 hover:bg-stone-100 rounded-t-md transition">
+                                Import Companies
+                            </button>
+                            <input type="file" id="importProducts" accept=".xlsx,.xls" class="hidden">
+                            <button type="button" onclick="document.getElementById('importProducts').click(); toggleSettings();" 
+                                class="w-full text-left px-3 py-2 text-xs text-stone-700 hover:bg-stone-100 transition">
+                                Import Products
+                            </button>
+                            <button type="button" onclick="openChangePasswordModal(); toggleSettings();" 
+                                class="w-full text-left px-3 py-2 text-xs text-stone-700 hover:bg-stone-100 rounded-b-md transition border-t border-stone-200">
+                                Change Password
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Label List Section (Below Form) -->
+        <div class="bg-stone-50 rounded-lg shadow-md p-4 mb-6 border border-stone-200">
+            <div class="flex justify-between items-center mb-3 border-b border-stone-200 pb-2">
+                <h2 class="text-lg font-semibold text-stone-700">Labels (<span id="labelCount">0</span>)</h2>
+                <div class="flex gap-2">
+                    <button id="clearAllBtn" class="text-red-500 hover:text-red-700 text-xs hidden">
+                        Clear All
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <!-- Label List -->
+                <div class="lg:col-span-2">
+                    <div id="labelList" class="space-y-1 max-h-48 overflow-y-auto">
+                        <p class="text-stone-400 text-center py-4 text-sm">No labels added yet</p>
+                    </div>
+                </div>
+
+                <!-- Generate Buttons -->
+                <div class="space-y-2">
+                    <button id="generatePdfBtn" 
+                        class="w-full bg-stone-600 text-white py-2 px-3 rounded-md hover:bg-stone-700 transition text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled>
+                        Generate PDF
+                    </button>
+                    <button id="generateExcelBtn" 
+                        class="w-full bg-amber-600 text-white py-2 px-3 rounded-md hover:bg-amber-700 transition text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled>
+                        Generate Excel
+                    </button>
+                    <div class="grid grid-cols-2 gap-2 pt-2 border-t border-stone-200">
+                        <button id="saveLabelsBtn" 
+                            class="bg-green-600 text-white py-1.5 px-2 rounded-md hover:bg-green-700 transition text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                            disabled>
+                            Save Labels
+                        </button>
+                        <input type="file" id="loadLabelsInput" accept=".json" class="hidden">
+                        <button id="loadLabelsBtn" 
+                            class="bg-blue-600 text-white py-1.5 px-2 rounded-md hover:bg-blue-700 transition text-xs font-medium">
+                            Load Labels
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Label Preview Section -->
+        <div class="mt-6 bg-stone-50 rounded-lg shadow-md p-6 border border-stone-200">
+            <h2 class="text-lg font-semibold mb-4 text-stone-700 border-b border-stone-200 pb-2">Label Preview (A4 - 3x5 Grid)</h2>
+            <div id="previewGrid" class="grid grid-cols-3 gap-2 max-w-3xl mx-auto bg-white p-4 rounded border border-stone-200">
+                <!-- Preview labels will be rendered here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <!-- macOS-style Calculators Popup -->
+    <div id="calcPopupBackdrop" class="fixed inset-0 bg-black/30 backdrop-blur-sm z-40 opacity-0 pointer-events-none transition-opacity duration-300"></div>
+    
+    <div id="calculatorsPopup" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-white rounded-xl shadow-2xl z-50 scale-0 opacity-0 transition-all duration-300 origin-center overflow-hidden">
+        <!-- macOS Window Title Bar -->
+        <div class="bg-gradient-to-b from-gray-100 to-gray-200 px-4 py-3 border-b border-gray-300 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <!-- Traffic Light Buttons -->
+                <button id="closePopupBtn" class="w-3 h-3 rounded-full bg-red-500 hover:bg-red-600 transition-colors shadow-sm flex items-center justify-center group">
+                    <svg class="w-2 h-2 text-red-800 opacity-0 group-hover:opacity-100" fill="currentColor" viewBox="0 0 8 8">
+                        <path d="M1.5 1.5l5 5M6.5 1.5l-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    </svg>
+                </button>
+                <button id="minimizePopupBtn" class="w-3 h-3 rounded-full bg-yellow-400 hover:bg-yellow-500 transition-colors shadow-sm flex items-center justify-center group">
+                    <svg class="w-2 h-2 text-yellow-800 opacity-0 group-hover:opacity-100" fill="currentColor" viewBox="0 0 8 8">
+                        <rect x="1" y="3.5" width="6" height="1" rx="0.5"/>
+                    </svg>
+                </button>
+                <button id="maximizePopupBtn" class="w-3 h-3 rounded-full bg-green-500 hover:bg-green-600 transition-colors shadow-sm flex items-center justify-center group">
+                    <svg class="w-2 h-2 text-green-800 opacity-0 group-hover:opacity-100" fill="currentColor" viewBox="0 0 8 8">
+                        <path d="M1 4h6M4 1v6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+            <span class="text-sm font-medium text-gray-600">Calculator</span>
+            <div class="w-16"></div>
+        </div>
+        
+        <!-- Scrollable Content -->
+        <div id="popupContent" class="max-h-[70vh] overflow-y-auto p-4 transition-all duration-300">
+            <!-- Loose Quantity Calculator -->
+            <div class="mb-6 pb-6 border-b border-gray-200">
+                <h3 class="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                    <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                    </svg>
+                    Loose Quantity Calculator
+                </h3>
+                <div class="grid grid-cols-2 gap-3 mb-3">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Total Quantity</label>
+                        <input type="number" id="calcTotalQty" min="0"
+                            class="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="e.g. 15021">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Pack Size (Per Carton)</label>
+                        <input type="number" id="calcPackSize" min="1"
+                            class="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="e.g. 60">
+                    </div>
+                </div>
+                <div class="bg-gray-50 p-2 rounded mb-3 text-sm">
+                    <span class="text-gray-600">Calculated: </span>
+                    <span id="calcResultCartons" class="font-medium text-indigo-700">0</span>
+                    <span class="text-gray-600"> cartons, </span>
+                    <span id="calcResultLoose" class="font-medium text-teal-700">0</span>
+                    <span class="text-gray-600"> loose</span>
+                </div>
+                <div class="flex gap-2">
+                    <button type="button" id="calcLooseBtn"
+                        class="flex-1 bg-indigo-100 text-indigo-700 py-1.5 px-3 rounded text-sm font-medium hover:bg-indigo-200 transition">
+                        Apply to Form
+                    </button>
+                    <button type="button" id="calcLooseOnlyBtn"
+                        class="flex-1 bg-teal-100 text-teal-700 py-1.5 px-3 rounded text-sm font-medium hover:bg-teal-200 transition">
+                        Loose Only
+                    </button>
+                </div>
+                <p class="text-xs text-gray-500 mt-2" id="looseCalcResult">Enter total quantity and pack size</p>
+            </div>
+
+            <!-- Retail Price Calculator -->
+            <div>
+                <h3 class="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                    <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    Retail Price Calculator
+                </h3>
+                <div class="flex gap-3 mb-3">
+                    <div class="flex-1">
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Trade Price</label>
+                        <input type="number" id="calcTradePrice" step="0.01" min="0"
+                            class="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="212.50">
+                    </div>
+                    <div class="flex items-end pb-1">
+                        <span class="text-gray-400 text-sm">× 100/85</span>
+                    </div>
+                </div>
+                <button type="button" id="calcRetailBtn"
+                    class="w-full bg-amber-100 text-amber-700 py-1.5 px-3 rounded text-sm font-medium hover:bg-amber-200 transition">
+                    Calculate & Apply Retail Price
+                </button>
+                <p class="text-xs text-gray-500 mt-2" id="retailCalcResult">Enter trade price to calculate retail</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Password Modal for Settings -->
+    <div id="passwordModalBackdrop" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 opacity-0 pointer-events-none transition-opacity duration-300"></div>
+    
+    <div id="passwordModal" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-sm bg-stone-50 rounded-xl shadow-2xl z-50 scale-0 opacity-0 transition-all duration-300 origin-center overflow-hidden border border-stone-200">
+        <!-- Title Bar -->
+        <div class="bg-gradient-to-b from-stone-100 to-stone-200 px-4 py-3 border-b border-stone-300 flex items-center justify-between">
+            <span class="text-sm font-medium text-stone-700">Settings Access</span>
+            <button id="closePasswordModal" class="text-stone-500 hover:text-stone-700">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        
+        <div class="p-6">
+            <div class="mb-4">
+                <label class="block text-xs font-medium text-stone-600 mb-1">Password</label>
+                <input type="password" id="settingsPasswordInput" 
+                    class="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm bg-white"
+                    placeholder="Enter password">
+            </div>
+            <p id="passwordError" class="text-red-500 text-xs mb-4 hidden">Incorrect password</p>
+            <button id="verifyPasswordBtn" 
+                class="w-full bg-amber-600 text-white py-2 px-4 rounded-md hover:bg-amber-700 transition text-sm font-medium">
+                Access Settings
+            </button>
+        </div>
+    </div>
+
+    <!-- Sticky Calculator Button - MOVED OUTSIDE popup to be always visible -->
+    <button type="button" id="openCalculatorsBtn"
+        class="fixed bottom-6 right-6 z-[45] bg-gradient-to-r from-amber-500 to-orange-500 text-white p-4 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-110 group">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+        </svg>
+        <span class="absolute right-full mr-2 top-1/2 -translate-y-1/2 bg-stone-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition whitespace-nowrap pointer-events-none">
+            Calculator
+        </span>
+    </button>
+
+    <!-- Minimized Dock Button (isolated from backdrop) -->
+    <div id="minimizedDock" class="fixed bottom-4 left-4 z-[60] translate-y-20 opacity-0 transition-all duration-300" style="isolation: isolate;">
+        <button id="restorePopupBtn" class="bg-white/95 backdrop-filter-none rounded-lg shadow-lg px-4 py-2 flex items-center gap-2 hover:shadow-xl transition-shadow border border-gray-200">
+            <div class="flex gap-1">
+                <span class="w-2 h-2 rounded-full bg-red-500"></span>
+                <span class="w-2 h-2 rounded-full bg-yellow-400"></span>
+                <span class="w-2 h-2 rounded-full bg-green-500"></span>
+            </div>
+            <span class="text-sm font-medium text-gray-700">Calculators</span>
+        </button>
+    </div>
+
+    <div id="toast" class="fixed bottom-4 right-4 bg-gray-800 text-white px-6 py-3 rounded-lg shadow-lg transform transition-all duration-300 z-50" style="transform: translateY(100px); opacity: 0;">
+        <span id="toastMessage">Message</span>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-client.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

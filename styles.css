@@ -1,0 +1,355 @@
+/* Custom styles for Label Generator */
+
+/* Smooth transitions for all interactive elements */
+input, button {
+    transition: all 0.2s ease;
+}
+
+/* Custom scrollbar for label list */
+#labelList::-webkit-scrollbar {
+    width: 6px;
+}
+
+#labelList::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+#labelList::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+#labelList::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Label card styling */
+.label-card {
+    border-left: 4px solid #3b82f6;
+    transition: all 0.2s ease;
+}
+
+.label-card:hover {
+    transform: translateX(4px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+/* Preview label box */
+.preview-label {
+    aspect-ratio: 4/3;
+    border: 1px solid #d1d5db;
+    background: white;
+    font-size: 0.65rem;
+    line-height: 1.2;
+    overflow: hidden;
+}
+
+.preview-label .product-name {
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.preview-label .strength {
+    color: #4b5563;
+    font-weight: 500;
+}
+
+.preview-label .date {
+    color: #6b7280;
+}
+
+.preview-label .quantity {
+    color: #059669;
+    font-weight: 600;
+}
+
+.preview-label .batch {
+    color: #7c3aed;
+}
+
+.preview-label .expiry {
+    color: #dc2626;
+    font-weight: 500;
+}
+
+.preview-label .price {
+    color: #0369a1;
+    font-weight: 600;
+}
+
+/* Empty state for preview */
+.preview-label.empty {
+    border-style: dashed;
+    background: #f9fafb;
+    color: #9ca3af;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Toast animation */
+#toast {
+    transform: translateY(100px) !important;
+    opacity: 0 !important;
+}
+
+#toast.show {
+    transform: translateY(0) !important;
+    opacity: 1 !important;
+}
+
+/* Grid transitions for smooth layout changes */
+#row1Container {
+    transition: all 0.3s ease-in-out;
+}
+
+/* Received date section transition */
+#receivedDateSection {
+    transition: opacity 0.2s ease-in-out;
+}
+
+/* Form focus states */
+input:focus {
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+    outline: none;
+}
+
+/* Remove default browser focus rings */
+input[type="number"]:focus {
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+}
+
+/* Ensure looseQty has normal border */
+#looseQty {
+    border: 1px solid #D1D5DB;
+}
+
+#looseQty:focus {
+    border-color: #3B82F6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+}
+
+/* Toggle Switch Styles */
+.toggle-checkbox {
+    transition: all 0.2s ease-in-out;
+    z-index: 10;
+    left: 0 !important;
+    top: 0 !important;
+}
+
+/* Large toggle (w-10 h-5) - moves 20px */
+.relative.w-10 .toggle-checkbox:checked {
+    left: 20px !important;
+    border-color: #10B981;
+}
+
+.toggle-checkbox:checked + .toggle-label {
+    background-color: #10B981;
+}
+
+.toggle-label {
+    transition: background-color 0.2s ease-in-out;
+}
+
+/* Slide animations for loose quantity input */
+#looseQtyContainer {
+    transition: all 0.3s ease-in-out;
+    overflow: hidden;
+}
+
+#looseQtyContainer.slide-in {
+    animation: slideIn 0.3s ease-out forwards;
+}
+
+#looseQtyContainer.slide-out {
+    animation: slideOut 0.2s ease-in forwards;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+        max-width: 0;
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+        max-width: 200px;
+    }
+}
+
+@keyframes slideOut {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+        max-width: 200px;
+    }
+    to {
+        opacity: 0;
+        transform: translateX(-20px);
+        max-width: 0;
+    }
+}
+
+/* Button press effect */
+button:active {
+    transform: scale(0.98);
+}
+
+/* Disabled input styling */
+input:disabled {
+    background-color: #f3f4f6;
+    cursor: not-allowed;
+    color: #9ca3af;
+}
+
+/* Delete button styling */
+.delete-btn {
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.label-card:hover .delete-btn {
+    opacity: 1;
+}
+
+/* Edit button styling */
+.edit-btn {
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.label-card:hover .edit-btn {
+    opacity: 1;
+}
+
+/* Editing mode highlight */
+.label-card.editing {
+    border-left-color: #f59e0b;
+    background-color: #fffbeb;
+    box-shadow: 0 0 0 2px #f59e0b;
+}
+
+/* macOS-style Popup Animations */
+#calculatorsPopup {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-origin: center center;
+    /* Ensure centered positioning */
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) scale(0);
+}
+
+#calculatorsPopup.scale-0 {
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0;
+}
+
+#calculatorsPopup.scale-100 {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+}
+
+/* Maximized state */
+#calculatorsPopup.w-full {
+    top: 0 !important;
+    left: 0 !important;
+    transform: translate(0, 0) scale(1) !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    max-width: none !important;
+}
+
+/* Minimize animation */
+#calculatorsPopup.translate-y-full {
+    transform: translate(-50%, 100%) scale(0.75) !important;
+    opacity: 0;
+}
+
+/* Ensure dock doesn't blur background */
+#minimizedDock {
+    backdrop-filter: none !important;
+    background: transparent !important;
+}
+
+#minimizedDock button {
+    backdrop-filter: none !important;
+}
+
+/* Traffic light buttons hover effects */
+#closePopupBtn:hover svg,
+#minimizePopupBtn:hover svg,
+#maximizePopupBtn:hover svg {
+    opacity: 1 !important;
+}
+
+/* Backdrop blur animation - CRITICAL: must allow clicks when hidden */
+#calcPopupBackdrop {
+    transition: opacity 0.3s ease, backdrop-filter 0.3s ease;
+    pointer-events: none !important; /* Force clicks through when hidden */
+}
+
+#calcPopupBackdrop.opacity-100 {
+    backdrop-filter: blur(4px);
+    pointer-events: auto !important; /* Capture clicks when visible */
+}
+
+/* Ensure hidden popup doesn't block clicks */
+#calculatorsPopup.scale-0 {
+    pointer-events: none !important;
+}
+
+#calculatorsPopup.scale-100 {
+    pointer-events: auto !important;
+}
+
+/* Scrollbar styling for popup content */
+#popupContent::-webkit-scrollbar {
+    width: 8px;
+}
+
+#popupContent::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+#popupContent::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+
+#popupContent::-webkit-scrollbar-thumb:hover {
+    background: #a1a1a1;
+}
+
+/* Dock button animation */
+#minimizedDock {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#minimizedDock.translate-y-0 {
+    transform: translateY(0);
+}
+
+/* Popup content transition */
+#popupContent {
+    scroll-behavior: smooth;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .container {
+        padding: 0.5rem;
+    }
+    
+    .preview-label {
+        font-size: 0.5rem;
+    }
+    
+    #calculatorsPopup {
+        max-width: 95vw;
+        margin: 0 10px;
+    }
+}

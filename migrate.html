@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Label Generator - Data Migration</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-client.js"></script>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 2px solid #3ecf8e;
+            padding-bottom: 10px;
+        }
+        .step {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 8px;
+            border-left: 4px solid #3ecf8e;
+        }
+        .step h3 {
+            margin-top: 0;
+            color: #2d3748;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        button {
+            background: #3ecf8e;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px 0 0;
+        }
+        button:hover {
+            background: #2cb47a;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .status {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 4px;
+            display: none;
+        }
+        .status.success {
+            display: block;
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            display: block;
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.info {
+            display: block;
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .data-preview {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 14px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            color: #3ecf8e;
+            text-decoration: none;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Label Generator - Data Migration Tool</h1>
+        <p>Migrate your localStorage data to Supabase online database.</p>
+
+        <div class="step">
+            <h3>Step 1: Configure Supabase</h3>
+            <p>Enter your Supabase credentials (find these in your Supabase Dashboard → Project Settings → API):</p>
+            <input type="text" id="supabaseUrl" placeholder="https://your-project.supabase.co">
+            <input type="text" id="supabaseKey" placeholder="eyJ...your-anon-key">
+            <button onclick="connectSupabase()">Connect to Supabase</button>
+            <div id="connectionStatus" class="status"></div>
+        </div>
+
+        <div class="step">
+            <h3>Step 2: Preview Local Data</h3>
+            <p>Check what data you have in localStorage:</p>
+            <button onclick="previewLocalData()">Preview Data</button>
+            <div id="dataPreview" class="data-preview" style="display:none;"></div>
+        </div>
+
+        <div class="step">
+            <h3>Step 3: Migrate to Supabase</h3>
+            <p>This will upload your local data to Supabase:</p>
+            <button id="migrateBtn" onclick="startMigration()" disabled>Start Migration</button>
+            <div id="migrationStatus" class="status"></div>
+        </div>
+
+        <a href="index.html" class="back-link">← Back to Label Generator</a>
+    </div>
+
+    <script>
+        let supabaseConnected = false;
+
+        function showStatus(elementId, message, type) {
+            const el = document.getElementById(elementId);
+            el.textContent = message;
+            el.className = 'status ' + type;
+        }
+
+        function connectSupabase() {
+            const url = document.getElementById('supabaseUrl').value.trim();
+            const key = document.getElementById('supabaseKey').value.trim();
+
+            if (!url || !key) {
+                showStatus('connectionStatus', 'Please enter both URL and Key', 'error');
+                return;
+            }
+
+            try {
+                // Update the global config in supabase-client.js
+                window.SUPABASE_URL = url;
+                window.SUPABASE_KEY = key;
+                
+                // Re-initialize with new credentials
+                const client = initSupabase();
+                
+                if (client) {
+                    supabaseConnected = true;
+                    showStatus('connectionStatus', '✓ Connected to Supabase successfully!', 'success');
+                    document.getElementById('migrateBtn').disabled = false;
+                } else {
+                    showStatus('connectionStatus', 'Failed to initialize Supabase client', 'error');
+                }
+            } catch (error) {
+                showStatus('connectionStatus', 'Error: ' + error.message, 'error');
+            }
+        }
+
+        function previewLocalData() {
+            const companies = localStorage.getItem('lg_companies');
+            const products = localStorage.getItem('lg_products');
+            const labels = localStorage.getItem('lg_labels_autosave');
+
+            let html = '<strong>localStorage Data:</strong><br><br>';
+            
+            if (companies) {
+                const c = JSON.parse(companies);
+                html += `Companies: ${c.length}<br>`;
+                html += c.map(x => '  - ' + x).join('<br>') + '<br><br>';
+            } else {
+                html += 'Companies: None<br><br>';
+            }
+
+            if (products) {
+                const p = JSON.parse(products);
+                const companyCount = Object.keys(p).length;
+                let productCount = 0;
+                Object.values(p).forEach(list => productCount += list.length);
+                html += `Products: ${productCount} across ${companyCount} companies<br>`;
+                Object.entries(p).forEach(([company, list]) => {
+                    html += `  ${company}: ${list.length} products<br>`;
+                });
+                html += '<br>';
+            } else {
+                html += 'Products: None<br><br>';
+            }
+
+            if (labels) {
+                const l = JSON.parse(labels);
+                html += `Saved Labels: ${l.count || 0} (from ${l.timestamp || 'unknown'})`;
+            } else {
+                html += 'Saved Labels: None';
+            }
+
+            const preview = document.getElementById('dataPreview');
+            preview.innerHTML = html;
+            preview.style.display = 'block';
+        }
+
+        async function startMigration() {
+            if (!supabaseConnected) {
+                showStatus('migrationStatus', 'Please connect to Supabase first', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('migrateBtn');
+            btn.disabled = true;
+            btn.textContent = 'Migrating...';
+            showStatus('migrationStatus', 'Migration in progress...', 'info');
+
+            try {
+                const result = await migrateLocalStorageToSupabase();
+                showStatus('migrationStatus', 
+                    `✓ Migration complete!\nMigrated ${result.companies} companies and ${result.products} products.`, 
+                    'success');
+            } catch (error) {
+                showStatus('migrationStatus', 'Migration failed: ' + error.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Start Migration';
+            }
+        }
+
+        // Auto-fill from localStorage if available
+        window.onload = () => {
+            const savedUrl = localStorage.getItem('supabase_url');
+            const savedKey = localStorage.getItem('supabase_key');
+            if (savedUrl) document.getElementById('supabaseUrl').value = savedUrl;
+            if (savedKey) document.getElementById('supabaseKey').value = savedKey;
+        };
+
+        // Save credentials when connecting (optional convenience)
+        function saveCredentials() {
+            const url = document.getElementById('supabaseUrl').value.trim();
+            const key = document.getElementById('supabaseKey').value.trim();
+            if (url) localStorage.setItem('supabase_url', url);
+            if (key) localStorage.setItem('supabase_key', key);
+        }
+    </script>
+</body>
+</html>

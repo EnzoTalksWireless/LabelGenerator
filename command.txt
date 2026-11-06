@@ -1,0 +1,6 @@
+cd "d:\LABEL GENERATOR\web-app"
+python api.py
+Terminal 2 - Frontend:
+cd "d:\LABEL GENERATOR\web-app"
+python -m http.server 8080
+Then open: http://localhost:8080
