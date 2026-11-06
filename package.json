@@ -1,0 +1,26 @@
+{
+  "name": "labelgenadv",
+  "version": "1.0.0",
+  "description": "Warehouse Stock Label Generator - A web-based application for creating and printing inventory labels",
+  "private": true,
+  "scripts": {
+    "dev": "python3 api.py",
+    "serve": "python3 -m http.server 8000"
+  },
+  "keywords": [
+    "label-generator",
+    "warehouse",
+    "inventory",
+    "barcode"
+  ],
+  "author": "Hamza",
+  "license": "MIT",
+  "dependencies": {
+    "@vercel/analytics": "^1.4.1"
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/EnzoTalksWireless/LabelGenerator.git"
+  }
+}
