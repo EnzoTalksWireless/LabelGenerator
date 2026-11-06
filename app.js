@@ -80,7 +80,7 @@ const verifyPasswordBtn = document.getElementById('verifyPasswordBtn');
 const passwordError = document.getElementById('passwordError');
 
 // Default settings password (can be changed and stored in localStorage)
-const DEFAULT_SETTINGS_PASSWORD = 'admin123';
+const DEFAULT_SETTINGS_PASSWORD = 'reckitlab123';
 let settingsUnlocked = false;
 
 // Popup Elements
